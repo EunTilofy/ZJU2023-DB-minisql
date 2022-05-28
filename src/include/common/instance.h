@@ -25,11 +25,14 @@ public:
     catalog_mgr_ = new CatalogManager(bpm_, nullptr, nullptr, init);
     // Allocate static page for db storage engine
     if (init) {
-      page_id_t id;
       ASSERT(bpm_->IsPageFree(CATALOG_META_PAGE_ID), "Catalog meta page not free.");
       ASSERT(bpm_->IsPageFree(INDEX_ROOTS_PAGE_ID), "Header page not free.");
-      ASSERT(bpm_->NewPage(id) != nullptr && id == CATALOG_META_PAGE_ID, "Failed to allocate catalog meta page.");
-      ASSERT(bpm_->NewPage(id) != nullptr && id == INDEX_ROOTS_PAGE_ID, "Failed to allocate header page.");
+      page_id_t id;
+      Page *page = nullptr; 
+      page = bpm_->NewPage(id);
+      ASSERT(page != nullptr && id == CATALOG_META_PAGE_ID, "Failed to allocate catalog meta page.");
+      page = bpm_->NewPage(id);
+      ASSERT(page != nullptr && id == INDEX_ROOTS_PAGE_ID, "Failed to allocate header page.");
       bpm_->UnpinPage(CATALOG_META_PAGE_ID, false);
       bpm_->UnpinPage(INDEX_ROOTS_PAGE_ID, false);
     } else {
