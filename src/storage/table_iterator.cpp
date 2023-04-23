@@ -1,7 +1,11 @@
-#include "common/macros.h"
 #include "storage/table_iterator.h"
+
+#include "common/macros.h"
 #include "storage/table_heap.h"
 
+/**
+ * TODO: Student Implement
+ */
 TableIterator::TableIterator() {
 
 }
@@ -30,10 +34,16 @@ Row *TableIterator::operator->() {
   return nullptr;
 }
 
+TableIterator &TableIterator::operator=(const TableIterator &itr) noexcept {
+  ASSERT(false, "Not implemented yet.");
+}
+
+// ++iter
 TableIterator &TableIterator::operator++() {
   return *this;
 }
 
+// iter++
 TableIterator TableIterator::operator++(int) {
   return TableIterator();
 }

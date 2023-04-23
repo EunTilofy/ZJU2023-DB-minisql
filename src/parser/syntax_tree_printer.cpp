@@ -35,8 +35,7 @@ void SyntaxTreePrinter::PrintTreeLow(pSyntaxNode node, std::ofstream &out) {
   if (node->next_ != nullptr) {
     PrintTreeLow(node->next_, out);
     out << "SYNTAX_NODE_" << node->id_ << "  ->  " << "SYNTAX_NODE_" << node->next_->id_ << ";" << std::endl;
-    out << "{rank=same; " << "SYNTAX_NODE_" << node->id_ << "," << "SYNTAX_NODE_" << node->next_->id_ << "};"
-        << std::endl;
+    out << "{rank=same; " << "SYNTAX_NODE_" << node->id_ << "," << "SYNTAX_NODE_" << node->next_->id_ << "};" << std::endl;
   }
 
 }

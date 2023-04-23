@@ -6,8 +6,6 @@
  *
  * Implemented by student self.
  */
-class LockManager {
+class LockManager {};
 
-};
-
-#endif //MINISQL_LOCK_MANAGER_H
+#endif  // MINISQL_LOCK_MANAGER_H

@@ -2,13 +2,14 @@
 #define MINISQL_REPLACER_H
 
 #include <cstdio>
+
 #include "common/config.h"
 
 /**
  * Replacer is an abstract class that tracks page usage.
  */
 class Replacer {
-public:
+ public:
   Replacer() = default;
 
   virtual ~Replacer() = default;

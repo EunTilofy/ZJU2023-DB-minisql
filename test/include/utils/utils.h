@@ -9,7 +9,7 @@
 #include "buffer/buffer_pool_manager.h"
 #include "storage/disk_manager.h"
 
-template<typename T>
+template <typename T>
 void ShuffleArray(std::vector<T> &array) {
   std::random_device rd;
   std::mt19937 rng(rd());
@@ -17,11 +17,11 @@ void ShuffleArray(std::vector<T> &array) {
 }
 
 class RandomUtils {
-public:
+ public:
   static void RandomString(char *buf, size_t len) {
     std::random_device r;
     std::default_random_engine rng(r());
-    std::uniform_int_distribution<char> uniform_dist(0);
+    std::uniform_int_distribution<char> uniform_dist(33, 122);
     for (size_t i = 0; i < len; i++) {
       buf[i] = uniform_dist(rng);
     }
@@ -40,7 +40,6 @@ public:
     std::uniform_real_distribution<float_t> uniform_dist(low, high);
     return uniform_dist(rng);
   }
-
 };
 
-#endif //MINISQL_UTILS_H
+#endif  // MINISQL_UTILS_H

@@ -22,4 +22,4 @@ int MinisqlParserGetError();
 
 char *MinisqlParserGetErrorMessage();
 
-#endif //MINISQL_PARSER_H
+#endif  // MINISQL_PARSER_H

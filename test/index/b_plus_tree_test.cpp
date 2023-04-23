@@ -1,7 +1,8 @@
+#include "index/b_plus_tree.h"
+
 #include "common/instance.h"
 #include "gtest/gtest.h"
-#include "index/b_plus_tree.h"
-#include "index/basic_comparator.h"
+#include "index/comparator.h"
 #include "utils/tree_file_mgr.h"
 #include "utils/utils.h"
 
@@ -10,20 +11,28 @@ static const std::string db_name = "bp_tree_insert_test.db";
 TEST(BPlusTreeTests, SampleTest) {
   // Init engine
   DBStorageEngine engine(db_name);
-  BasicComparator<int> comparator;
-  BPlusTree<int, int, BasicComparator<int>> tree(0, engine.bpm_, comparator, 4, 4);
+  std::vector<Column *> columns = {
+      new Column("int", TypeId::kTypeInt, 0, false, false),
+  };
+  Schema *table_schema = new Schema(columns);
+  KeyManager KP(table_schema, 16);
+  BPlusTree tree(0, engine.bpm_, KP);
   TreeFileManagers mgr("tree_");
   // Prepare data
   const int n = 30;
-  vector<int> keys;
-  vector<int> values;
-  vector<int> delete_seq;
-  map<int, int> kv_map;
+  vector<GenericKey *> keys;
+  vector<RowId> values;
+  vector<GenericKey *> delete_seq;
+  map<GenericKey *, RowId> kv_map;
   for (int i = 0; i < n; i++) {
-    keys.push_back(i);
-    values.push_back(i);
-    delete_seq.push_back(i);
+    GenericKey *key = KP.InitKey();
+    std::vector<Field> fields{Field(TypeId::kTypeInt, i)};
+    KP.SerializeFromKey(key, Row(fields), table_schema);
+    keys.push_back(key);
+    values.push_back(RowId(i));
+    delete_seq.push_back(key);
   }
+  vector<GenericKey *> keys_copy(keys);
   // Shuffle data
   ShuffleArray(keys);
   ShuffleArray(values);
@@ -40,10 +49,10 @@ TEST(BPlusTreeTests, SampleTest) {
   // Print tree
   tree.PrintTree(mgr[0]);
   // Search keys
-  vector<int> ans;
+  vector<RowId> ans;
   for (int i = 0; i < n; i++) {
-    tree.GetValue(i, ans);
-    ASSERT_EQ(kv_map[i], ans[i]);
+    tree.GetValue(keys_copy[i], ans);
+    ASSERT_EQ(kv_map[keys_copy[i]], ans[i]);
   }
   ASSERT_TRUE(tree.Check());
   // Delete half keys

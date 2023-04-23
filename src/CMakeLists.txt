@@ -1,11 +1,13 @@
 # recursive files
-FILE(GLOB_RECURSE MINISQL_SOURCE ${PROJECT_SOURCE_DIR}/src/*/*.cpp
+FILE(GLOB_RECURSE MAIN_SOURCES ${PROJECT_SOURCE_DIR}/src/*/*.cpp
         ${PROJECT_SOURCE_DIR}/src/*/*/*.cpp
+        ${PROJECT_SOURCE_DIR}/src/*/*/*/*.cpp
         ${PROJECT_SOURCE_DIR}/src/*/*.c
         ${PROJECT_SOURCE_DIR}/src/*/*/*.c
         )
-ADD_LIBRARY(minisql_shared SHARED ${MINISQL_SOURCE})
-TARGET_LINK_LIBRARIES(minisql_shared glog)
+MESSAGE(STATUS "Source file lists: ${MAIN_SOURCES}")
+ADD_LIBRARY(zSql SHARED ${MAIN_SOURCES})
+TARGET_LINK_LIBRARIES(zSql glog)
 
 ADD_EXECUTABLE(main main.cpp)
-TARGET_LINK_LIBRARIES(main glog minisql_shared)
+TARGET_LINK_LIBRARIES(main glog zSql)

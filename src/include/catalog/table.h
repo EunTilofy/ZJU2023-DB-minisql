@@ -10,15 +10,20 @@
 class TableMetadata {
   friend class TableInfo;
 
-public:
+ public:
+  ~TableMetadata() { delete schema_; }
+
   uint32_t SerializeTo(char *buf) const;
 
   uint32_t GetSerializedSize() const;
 
-  static uint32_t DeserializeFrom(char *buf, TableMetadata *&table_meta, MemHeap *heap);
+  static uint32_t DeserializeFrom(char *buf, TableMetadata *&table_meta);
 
-  static TableMetadata *Create(table_id_t table_id, std::string table_name,
-                               page_id_t root_page_id, TableSchema *schema, MemHeap *heap);
+  /*
+   * will create new table schema and owned by mem heap
+   */
+  static TableMetadata *Create(table_id_t table_id, std::string table_name, page_id_t root_page_id,
+                               TableSchema *schema);
 
   inline table_id_t GetTableId() const { return table_id_; }
 
@@ -28,13 +33,12 @@ public:
 
   inline Schema *GetSchema() const { return schema_; }
 
-
-private:
+ private:
   TableMetadata() = delete;
 
   TableMetadata(table_id_t table_id, std::string table_name, page_id_t root_page_id, TableSchema *schema);
 
-private:
+ private:
   static constexpr uint32_t TABLE_METADATA_MAGIC_NUM = 344528;
   table_id_t table_id_;
   std::string table_name_;
@@ -46,14 +50,12 @@ private:
  * The TableInfo class maintains metadata about a table.
  */
 class TableInfo {
-public:
-  static TableInfo *Create(MemHeap *heap) {
-    void *buf = heap->Allocate(sizeof(TableInfo));
-    return new(buf)TableInfo();
-  }
+ public:
+  static TableInfo *Create() { return new TableInfo(); }
 
   ~TableInfo() {
-    delete heap_;
+    delete table_meta_;
+    delete table_heap_;
   }
 
   void Init(TableMetadata *table_meta, TableHeap *table_heap) {
@@ -63,8 +65,6 @@ public:
 
   inline TableHeap *GetTableHeap() const { return table_heap_; }
 
-  inline MemHeap *GetMemHeap() const { return heap_; }
-
   inline table_id_t GetTableId() const { return table_meta_->table_id_; }
 
   inline std::string GetTableName() const { return table_meta_->table_name_; }
@@ -73,13 +73,12 @@ public:
 
   inline page_id_t GetRootPageId() const { return table_meta_->root_page_id_; }
 
-private:
-  explicit TableInfo() : heap_(new SimpleMemHeap()) {};
+ private:
+  explicit TableInfo(){};
 
-private:
+ private:
   TableMetadata *table_meta_;
   TableHeap *table_heap_;
-  MemHeap *heap_; /** store all objects allocated in table_meta and table heap */
 };
 
-#endif //MINISQL_TABLE_H
+#endif  // MINISQL_TABLE_H

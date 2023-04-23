@@ -4,8 +4,8 @@
 #include <climits>
 #include <condition_variable>
 #include <mutex>
-#include "macros.h"
 
+#include "macros.h"
 
 /**
  * Reader-Writer latch backed by std::mutex.
@@ -15,7 +15,7 @@ class ReaderWriterLatch {
   using cond_t = std::condition_variable;
   static const uint32_t MAX_READERS = UINT_MAX;
 
-public:
+ public:
   ReaderWriterLatch() = default;
 
   ~ReaderWriterLatch() { std::lock_guard<mutex_t> guard(mutex_); }
@@ -77,7 +77,7 @@ public:
     }
   }
 
-private:
+ private:
   mutex_t mutex_;
   cond_t writer_;
   cond_t reader_;

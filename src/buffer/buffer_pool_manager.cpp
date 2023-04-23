@@ -1,9 +1,12 @@
 #include "buffer/buffer_pool_manager.h"
+
 #include "glog/logging.h"
 #include "page/bitmap_page.h"
 
+static const char EMPTY_PAGE_DATA[PAGE_SIZE] = {0};
+
 BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager *disk_manager)
-        : pool_size_(pool_size), disk_manager_(disk_manager) {
+    : pool_size_(pool_size), disk_manager_(disk_manager) {
   pages_ = new Page[pool_size_];
   replacer_ = new LRUReplacer(pool_size_);
   for (size_t i = 0; i < pool_size_; i++) {
@@ -12,13 +15,16 @@ BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager *disk_manager
 }
 
 BufferPoolManager::~BufferPoolManager() {
-  for (auto page: page_table_) {
+  for (auto page : page_table_) {
     FlushPage(page.first);
   }
   delete[] pages_;
   delete replacer_;
 }
 
+/**
+ * TODO: Student Implement
+ */
 Page *BufferPoolManager::FetchPage(page_id_t page_id) {
   // 1.     Search the page table for the requested page (P).
   // 1.1    If P exists, pin it and return it immediately.
@@ -30,6 +36,9 @@ Page *BufferPoolManager::FetchPage(page_id_t page_id) {
   return nullptr;
 }
 
+/**
+ * TODO: Student Implement
+ */
 Page *BufferPoolManager::NewPage(page_id_t &page_id) {
   // 0.   Make sure you call AllocatePage!
   // 1.   If all the pages in the buffer pool are pinned, return nullptr.
@@ -39,6 +48,9 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
   return nullptr;
 }
 
+/**
+ * TODO: Student Implement
+ */
 bool BufferPoolManager::DeletePage(page_id_t page_id) {
   // 0.   Make sure you call DeallocatePage!
   // 1.   Search the page table for the requested page (P).
@@ -48,10 +60,16 @@ bool BufferPoolManager::DeletePage(page_id_t page_id) {
   return false;
 }
 
+/**
+ * TODO: Student Implement
+ */
 bool BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty) {
   return false;
 }
 
+/**
+ * TODO: Student Implement
+ */
 bool BufferPoolManager::FlushPage(page_id_t page_id) {
   return false;
 }
@@ -61,7 +79,7 @@ page_id_t BufferPoolManager::AllocatePage() {
   return next_page_id;
 }
 
-void BufferPoolManager::DeallocatePage(page_id_t page_id) {
+void BufferPoolManager::DeallocatePage(__attribute__((unused)) page_id_t page_id) {
   disk_manager_->DeAllocatePage(page_id);
 }
 

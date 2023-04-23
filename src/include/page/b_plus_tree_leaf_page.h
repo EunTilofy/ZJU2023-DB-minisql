@@ -24,36 +24,46 @@
 #include <utility>
 #include <vector>
 
+#include "index/generic_key.h"
 #include "page/b_plus_tree_page.h"
 
-#define B_PLUS_TREE_LEAF_PAGE_TYPE BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>
-#define LEAF_PAGE_HEADER_SIZE 28
+#define LEAF_PAGE_HEADER_SIZE 32
 #define LEAF_PAGE_SIZE (((PAGE_SIZE - LEAF_PAGE_HEADER_SIZE) / sizeof(MappingType)) - 1)
 
-INDEX_TEMPLATE_ARGUMENTS
 class BPlusTreeLeafPage : public BPlusTreePage {
-public:
+ public:
   // After creating a new leaf page from buffer pool, must call initialize
   // method to set default values
-  void Init(page_id_t page_id, page_id_t parent_id = INVALID_PAGE_ID, int max_size = LEAF_PAGE_SIZE);
+  void Init(page_id_t page_id, page_id_t parent_id = INVALID_PAGE_ID, int key_size = UNDEFINED_SIZE,
+            int max_size = UNDEFINED_SIZE);
 
   // helper methods
   page_id_t GetNextPageId() const;
 
   void SetNextPageId(page_id_t next_page_id);
 
-  KeyType KeyAt(int index) const;
+  GenericKey *KeyAt(int index);
 
-  int KeyIndex(const KeyType &key, const KeyComparator &comparator) const;
+  void SetKeyAt(int index, GenericKey *key);
 
-  const MappingType &GetItem(int index);
+  RowId ValueAt(int index) const;
+
+  void SetValueAt(int index, RowId value);
+
+  int KeyIndex(const GenericKey *key, const KeyManager &comparator);
+
+  void *PairPtrAt(int index);
+
+  void PairCopy(void *dest, void *src, int pair_num = 1);
+
+  std::pair<GenericKey *, RowId> GetItem(int index);
 
   // insert and delete methods
-  int Insert(const KeyType &key, const ValueType &value, const KeyComparator &comparator);
+  int Insert(GenericKey *key, const RowId &value, const KeyManager &comparator);
 
-  bool Lookup(const KeyType &key, ValueType &value, const KeyComparator &comparator) const;
+  bool Lookup(const GenericKey *key, RowId &value, const KeyManager &comparator);
 
-  int RemoveAndDeleteRecord(const KeyType &key, const KeyComparator &comparator);
+  int RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &comparator);
 
   // Split and Merge utility methods
   void MoveHalfTo(BPlusTreeLeafPage *recipient);
@@ -64,15 +74,17 @@ public:
 
   void MoveLastToFrontOf(BPlusTreeLeafPage *recipient);
 
-private:
-  void CopyNFrom(MappingType *items, int size);
+ private:
+  void CopyNFrom(void *src, int size);
 
-  void CopyLastFrom(const MappingType &item);
+  void CopyLastFrom(GenericKey *key, const RowId value);
 
-  void CopyFirstFrom(const MappingType &item);
+  void CopyFirstFrom(GenericKey *key, const RowId value);
 
-  page_id_t next_page_id_;
-  MappingType array_[0];
+  page_id_t next_page_id_{INVALID_PAGE_ID};
+
+  char data_[PAGE_SIZE - LEAF_PAGE_HEADER_SIZE];
 };
 
+using LeafPage = BPlusTreeLeafPage;
 #endif  // MINISQL_B_PLUS_TREE_LEAF_PAGE_H

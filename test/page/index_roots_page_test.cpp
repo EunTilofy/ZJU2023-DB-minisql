@@ -1,7 +1,8 @@
+#include "page/index_roots_page.h"
+
 #include <unordered_set>
 
 #include "gtest/gtest.h"
-#include "page/index_roots_page.h"
 
 TEST(PageTests, IndexRootsPageTest) {
   char *buf = new char[PAGE_SIZE];

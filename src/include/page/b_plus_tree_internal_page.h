@@ -1,12 +1,15 @@
 #ifndef MINISQL_B_PLUS_TREE_INTERNAL_PAGE_H
 #define MINISQL_B_PLUS_TREE_INTERNAL_PAGE_H
 
+#include <string.h>
+
 #include <queue>
+
+#include "index/generic_key.h"
 #include "page/b_plus_tree_page.h"
 
-#define B_PLUS_TREE_INTERNAL_PAGE_TYPE BPlusTreeInternalPage<KeyType, ValueType, KeyComparator>
-#define INTERNAL_PAGE_HEADER_SIZE 24
-#define INTERNAL_PAGE_SIZE ((PAGE_SIZE - INTERNAL_PAGE_HEADER_SIZE) / (sizeof(MappingType)) - 1)
+#define INTERNAL_PAGE_HEADER_SIZE 28
+#define INTERNAL_PAGE_SIZE ((PAGE_SIZE - INTERNAL_PAGE_HEADER_SIZE) / (sizeof(std::pair<GenericKey *, page_id_t>)) - 1)
 /**
  * Store n indexed keys and n+1 child pointers (page_id) within internal page.
  * Pointer PAGE_ID(i) points to a subtree in which all keys K satisfy:
@@ -20,49 +23,56 @@
  * | HEADER | KEY(1)+PAGE_ID(1) | KEY(2)+PAGE_ID(2) | ... | KEY(n)+PAGE_ID(n) |
  *  --------------------------------------------------------------------------
  */
-INDEX_TEMPLATE_ARGUMENTS
 class BPlusTreeInternalPage : public BPlusTreePage {
-public:
+ public:
   // must call initialize method after "create" a new node
-  void Init(page_id_t page_id, page_id_t parent_id = INVALID_PAGE_ID, int max_size = INTERNAL_PAGE_SIZE);
+  void Init(page_id_t page_id, page_id_t parent_id = INVALID_PAGE_ID, int key_size = UNDEFINED_SIZE,
+            int max_size = UNDEFINED_SIZE);
 
-  KeyType KeyAt(int index) const;
+  GenericKey *KeyAt(int index);
 
-  void SetKeyAt(int index, const KeyType &key);
+  void SetKeyAt(int index, GenericKey *key);
 
-  int ValueIndex(const ValueType &value) const;
+  int ValueIndex(const page_id_t &value) const;
 
-  ValueType ValueAt(int index) const;
+  page_id_t ValueAt(int index) const;
 
-  ValueType Lookup(const KeyType &key, const KeyComparator &comparator) const;
+  void SetValueAt(int index, page_id_t value);
 
-  void PopulateNewRoot(const ValueType &old_value, const KeyType &new_key, const ValueType &new_value);
+  void *PairPtrAt(int index);
 
-  int InsertNodeAfter(const ValueType &old_value, const KeyType &new_key, const ValueType &new_value);
+  void PairCopy(void *dest, void *src, int pair_num = 1);
+
+  page_id_t Lookup(const GenericKey *key, const KeyManager &KP);
+
+  void PopulateNewRoot(const page_id_t &old_value, GenericKey *new_key, const page_id_t &new_value);
+
+  int InsertNodeAfter(const page_id_t &old_value, GenericKey *new_key, const page_id_t &new_value);
 
   void Remove(int index);
 
-  ValueType RemoveAndReturnOnlyChild();
+  page_id_t RemoveAndReturnOnlyChild();
 
   // Split and Merge utility methods
-  void MoveAllTo(BPlusTreeInternalPage *recipient, const KeyType &middle_key, BufferPoolManager *buffer_pool_manager);
+  void MoveAllTo(BPlusTreeInternalPage *recipient, GenericKey *middle_key, BufferPoolManager *buffer_pool_manager);
 
   void MoveHalfTo(BPlusTreeInternalPage *recipient, BufferPoolManager *buffer_pool_manager);
 
-  void MoveFirstToEndOf(BPlusTreeInternalPage *recipient, const KeyType &middle_key,
+  void MoveFirstToEndOf(BPlusTreeInternalPage *recipient, GenericKey *middle_key,
                         BufferPoolManager *buffer_pool_manager);
 
-  void MoveLastToFrontOf(BPlusTreeInternalPage *recipient, const KeyType &middle_key,
+  void MoveLastToFrontOf(BPlusTreeInternalPage *recipient, GenericKey *middle_key,
                          BufferPoolManager *buffer_pool_manager);
 
-private:
-  void CopyNFrom(MappingType *items, int size, BufferPoolManager *buffer_pool_manager);
+ private:
+  void CopyNFrom(void *src, int size, BufferPoolManager *buffer_pool_manager);
 
-  void CopyLastFrom(const MappingType &pair, BufferPoolManager *buffer_pool_manager);
+  void CopyLastFrom(GenericKey *key, page_id_t value, BufferPoolManager *buffer_pool_manager);
 
-  void CopyFirstFrom(const MappingType &pair, BufferPoolManager *buffer_pool_manager);
+  void CopyFirstFrom(page_id_t value, BufferPoolManager *buffer_pool_manager);
 
-  MappingType array_[0];
+  char data_[PAGE_SIZE - INTERNAL_PAGE_HEADER_SIZE];
 };
 
+using InternalPage = BPlusTreeInternalPage;
 #endif  // MINISQL_B_PLUS_TREE_INTERNAL_PAGE_H

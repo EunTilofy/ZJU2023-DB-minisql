@@ -5,11 +5,9 @@
 #include "record/row.h"
 #include "transaction/transaction.h"
 
-
 class TableHeap;
 
 class TableIterator {
-
 public:
   // you may define your own constructor based on your member variables
   explicit TableIterator();
@@ -26,6 +24,8 @@ public:
 
   Row *operator->();
 
+  TableIterator &operator=(const TableIterator &itr) noexcept;
+
   TableIterator &operator++();
 
   TableIterator operator++(int);
@@ -34,4 +34,4 @@ private:
   // add your own private member variables here
 };
 
-#endif //MINISQL_TABLE_ITERATOR_H
+#endif  // MINISQL_TABLE_ITERATOR_H

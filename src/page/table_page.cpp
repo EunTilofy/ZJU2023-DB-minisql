@@ -8,8 +8,8 @@ void TablePage::Init(page_id_t page_id, page_id_t prev_id, LogManager *log_mgr, 
   SetTupleCount(0);
 }
 
-bool TablePage::InsertTuple(Row &row, Schema *schema, Transaction *txn,
-                            LockManager *lock_manager, LogManager *log_manager) {
+bool TablePage::InsertTuple(Row &row, Schema *schema, Transaction *txn, LockManager *lock_manager,
+                            LogManager *log_manager) {
   uint32_t serialized_size = row.GetSerializedSize(schema);
   ASSERT(serialized_size > 0, "Can not have empty row.");
   if (GetFreeSpaceRemaining() < serialized_size + SIZE_TUPLE) {
@@ -30,7 +30,7 @@ bool TablePage::InsertTuple(Row &row, Schema *schema, Transaction *txn,
   // Otherwise we claim available free space..
   SetFreeSpacePointer(GetFreeSpacePointer() - serialized_size);
   uint32_t __attribute__((unused)) write_bytes = row.SerializeTo(GetData() + GetFreeSpacePointer(), schema);
-  ASSERT(write_bytes = serialized_size, "Unexpected behavior in row serialize.");
+  ASSERT(write_bytes == serialized_size, "Unexpected behavior in row serialize.");
 
   // Set the tuple.
   SetTupleOffsetAtSlot(i, GetFreeSpacePointer());
@@ -61,8 +61,8 @@ bool TablePage::MarkDelete(const RowId &rid, Transaction *txn, LockManager *lock
   return true;
 }
 
-bool TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema,
-                            Transaction *txn, LockManager *lock_manager, LogManager *log_manager) {
+bool TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema, Transaction *txn,
+                            LockManager *lock_manager, LogManager *log_manager) {
   ASSERT(old_row != nullptr && old_row->GetRowId().Get() != INVALID_ROWID.Get(), "invalid old row.");
   uint32_t serialized_size = new_row.GetSerializedSize(schema);
   ASSERT(serialized_size > 0, "Can not have empty row.");

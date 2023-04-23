@@ -5,9 +5,7 @@
  * Transaction tracks information related to a transaction.
  *
  * Implemented by student self
-*/
-class Transaction {
-
-};
+ */
+class Transaction {};
 
 #endif  // MINISQL_TRANSACTION_H

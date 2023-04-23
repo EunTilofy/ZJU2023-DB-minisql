@@ -5,37 +5,37 @@
 #include <climits>
 #include <cstdlib>
 #include <string>
+
 #include "buffer/buffer_pool_manager.h"
 
-#define MappingType std::pair<KeyType, ValueType>
-
-#define INDEX_TEMPLATE_ARGUMENTS template <typename KeyType, typename ValueType, typename KeyComparator>
-
 // define page type enum
-enum class IndexPageType {
-  INVALID_INDEX_PAGE = 0, LEAF_PAGE, INTERNAL_PAGE
-};
+enum class IndexPageType { INVALID_INDEX_PAGE = 0, LEAF_PAGE, INTERNAL_PAGE };
 
+#define UNDEFINED_SIZE 0
 /**
  * Both internal and leaf page are inherited from this page.
  *
  * It actually serves as a header part for each B+ tree page and
  * contains information shared by both leaf page and internal page.
  *
- * Header format (size in byte, 24 bytes in total):
+ * Header format (size in byte, 28 bytes in total):
  * ----------------------------------------------------------------------------
- * | PageType (4) | LSN (4) | CurrentSize (4) | MaxSize (4) |
+ * | PageType (4) | KeySize (4) | LSN (4) | CurrentSize (4) | MaxSize (4) |
  * ----------------------------------------------------------------------------
  * | ParentPageId (4) | PageId(4) |
  * ----------------------------------------------------------------------------
  */
 class BPlusTreePage {
-public:
+ public:
   bool IsLeafPage() const;
 
   bool IsRootPage() const;
 
   void SetPageType(IndexPageType page_type);
+
+  int GetKeySize() const;
+
+  void SetKeySize(int size);
 
   int GetSize() const;
 
@@ -59,9 +59,10 @@ public:
 
   void SetLSN(lsn_t lsn = INVALID_LSN);
 
-private:
+ private:
   // member variable, attributes that both internal and leaf page share
   [[maybe_unused]] IndexPageType page_type_;
+  [[maybe_unused]] int key_size_;
   [[maybe_unused]] lsn_t lsn_;
   [[maybe_unused]] int size_;
   [[maybe_unused]] int max_size_;

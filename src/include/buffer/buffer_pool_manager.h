@@ -6,14 +6,14 @@
 #include <unordered_map>
 
 #include "buffer/lru_replacer.h"
-#include "page/page.h"
 #include "page/disk_file_meta_page.h"
+#include "page/page.h"
 #include "storage/disk_manager.h"
 
 using namespace std;
 
 class BufferPoolManager {
-public:
+ public:
   explicit BufferPoolManager(size_t pool_size, DiskManager *disk_manager);
 
   ~BufferPoolManager();
@@ -32,7 +32,7 @@ public:
 
   bool CheckAllUnpinned();
 
-private:
+ private:
   /**
    * Allocate new page (operations like create index/table) For now just keep an increasing counter
    */
@@ -43,15 +43,16 @@ private:
    */
   void DeallocatePage(page_id_t page_id);
 
+  frame_id_t TryToFindFreePage();
 
-private:
-  size_t pool_size_;                                        // number of pages in buffer pool
-  Page *pages_;                                             // array of pages
-  DiskManager *disk_manager_;                               // pointer to the disk manager.
-  std::unordered_map<page_id_t, frame_id_t> page_table_;    // to keep track of pages
-  Replacer *replacer_;                                      // to find an unpinned page for replacement
-  std::list<frame_id_t> free_list_;                         // to find a free page for replacement
-  recursive_mutex latch_;                                   // to protect shared data structure
+ private:
+  size_t pool_size_;                                 // number of pages in buffer pool
+  Page *pages_;                                      // array of pages
+  DiskManager *disk_manager_;                        // pointer to the disk manager.
+  unordered_map<page_id_t, frame_id_t> page_table_;  // to keep track of pages
+  Replacer *replacer_;                               // to find an unpinned page for replacement
+  list<frame_id_t> free_list_;                       // to find a free page for replacement
+  recursive_mutex latch_;                            // to protect shared data structure
 };
 
 #endif  // MINISQL_BUFFER_POOL_MANAGER_H

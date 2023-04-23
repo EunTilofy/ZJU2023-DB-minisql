@@ -1,7 +1,8 @@
+#include "storage/disk_manager.h"
+
 #include <unordered_set>
 
 #include "gtest/gtest.h"
-#include "storage/disk_manager.h"
 
 TEST(DiskManagerTest, BitMapPageTest) {
   const size_t size = 512;
@@ -33,7 +34,7 @@ TEST(DiskManagerTest, BitMapPageTest) {
   ASSERT_FALSE(bitmap->AllocatePage(ofs));
 }
 
-TEST(DiskManagerTest, DISABLED_FreePageAllocationTest) {
+TEST(DiskManagerTest, FreePageAllocationTest) {
   std::string db_name = "disk_test.db";
   DiskManager *disk_mgr = new DiskManager(db_name);
   int extent_nums = 2;

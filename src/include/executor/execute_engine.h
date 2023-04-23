@@ -1,10 +1,16 @@
 #ifndef MINISQL_EXECUTE_ENGINE_H
 #define MINISQL_EXECUTE_ENGINE_H
 
+#include <memory>
 #include <string>
 #include <unordered_map>
+
 #include "common/dberr.h"
 #include "common/instance.h"
+#include "executor/execute_context.h"
+#include "executor/executors/abstract_executor.h"
+#include "executor/plans/abstract_plan.h"
+#include "record/row.h"
 #include "transaction/transaction.h"
 
 extern "C" {
@@ -12,21 +18,10 @@ extern "C" {
 };
 
 /**
- * ExecuteContext stores all the context necessary to run in the execute engine
- * This struct is implemented by student self for necessary.
- *
- * eg: transaction info, execute result...
- */
-struct ExecuteContext {
-  bool flag_quit_{false};
-  Transaction *txn_{nullptr};
-};
-
-/**
  * ExecuteEngine
  */
 class ExecuteEngine {
-public:
+ public:
   ExecuteEngine();
 
   ~ExecuteEngine() {
@@ -38,9 +33,16 @@ public:
   /**
    * executor interface
    */
-  dberr_t Execute(pSyntaxNode ast, ExecuteContext *context);
+  dberr_t Execute(pSyntaxNode ast);
 
-private:
+  dberr_t ExecutePlan(const AbstractPlanNodeRef &plan, std::vector<Row> *result_set, Transaction *txn,
+                      ExecuteContext *exec_ctx);
+
+  void ExecuteInformation(dberr_t result);
+
+ private:
+  static std::unique_ptr<AbstractExecutor> CreateExecutor(ExecuteContext *exec_ctx, const AbstractPlanNodeRef &plan);
+
   dberr_t ExecuteCreateDatabase(pSyntaxNode ast, ExecuteContext *context);
 
   dberr_t ExecuteDropDatabase(pSyntaxNode ast, ExecuteContext *context);
@@ -61,14 +63,6 @@ private:
 
   dberr_t ExecuteDropIndex(pSyntaxNode ast, ExecuteContext *context);
 
-  dberr_t ExecuteSelect(pSyntaxNode ast, ExecuteContext *context);
-
-  dberr_t ExecuteInsert(pSyntaxNode ast, ExecuteContext *context);
-
-  dberr_t ExecuteDelete(pSyntaxNode ast, ExecuteContext *context);
-
-  dberr_t ExecuteUpdate(pSyntaxNode ast, ExecuteContext *context);
-
   dberr_t ExecuteTrxBegin(pSyntaxNode ast, ExecuteContext *context);
 
   dberr_t ExecuteTrxCommit(pSyntaxNode ast, ExecuteContext *context);
@@ -79,9 +73,9 @@ private:
 
   dberr_t ExecuteQuit(pSyntaxNode ast, ExecuteContext *context);
 
-private:
-  [[maybe_unused]] std::unordered_map<std::string, DBStorageEngine *> dbs_;  /** all opened databases */
-  [[maybe_unused]] std::string current_db_;  /** current database */
+ private:
+  std::unordered_map<std::string, DBStorageEngine *> dbs_; /** all opened databases */
+  std::string current_db_;                                 /** current database */
 };
 
-#endif //MINISQL_EXECUTE_ENGINE_H
+#endif  // MINISQL_EXECUTE_ENGINE_H

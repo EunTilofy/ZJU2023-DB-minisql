@@ -2,25 +2,24 @@
 #define MINISQL_TABLE_HEAP_H
 
 #include "buffer/buffer_pool_manager.h"
+#include "page/header_page.h"
 #include "page/table_page.h"
 #include "storage/table_iterator.h"
-#include "transaction/log_manager.h"
 #include "transaction/lock_manager.h"
+#include "transaction/log_manager.h"
 
 class TableHeap {
   friend class TableIterator;
 
-public:
+ public:
   static TableHeap *Create(BufferPoolManager *buffer_pool_manager, Schema *schema, Transaction *txn,
-                           LogManager *log_manager, LockManager *lock_manager, MemHeap *heap) {
-    void *buf = heap->Allocate(sizeof(TableHeap));
-    return new(buf) TableHeap(buffer_pool_manager, schema, txn, log_manager, lock_manager);
+                           LogManager *log_manager, LockManager *lock_manager) {
+    return new TableHeap(buffer_pool_manager, schema, txn, log_manager, lock_manager);
   }
 
   static TableHeap *Create(BufferPoolManager *buffer_pool_manager, page_id_t first_page_id, Schema *schema,
-                           LogManager *log_manager, LockManager *lock_manager, MemHeap *heap) {
-    void *buf = heap->Allocate(sizeof(TableHeap));
-    return new(buf) TableHeap(buffer_pool_manager, first_page_id, schema, log_manager, lock_manager);
+                           LogManager *log_manager, LockManager *lock_manager) {
+    return new TableHeap(buffer_pool_manager, first_page_id, schema, log_manager, lock_manager);
   }
 
   ~TableHeap() {}
@@ -72,10 +71,22 @@ public:
    */
   bool GetTuple(Row *row, Transaction *txn);
 
+  void FreeTableHeap() {
+    auto next_page_id = first_page_id_;
+    while (next_page_id != INVALID_PAGE_ID) {
+      auto old_page_id = next_page_id;
+      auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(old_page_id));
+      assert(page != nullptr);
+      next_page_id = page->GetNextPageId();
+      buffer_pool_manager_->UnpinPage(old_page_id, false);
+      buffer_pool_manager_->DeletePage(old_page_id);
+    }
+  }
+
   /**
    * Free table heap and release storage in disk file
    */
-  void FreeHeap();
+  void DeleteTable(page_id_t page_id = INVALID_PAGE_ID);
 
   /**
    * @return the begin iterator of this table
@@ -105,18 +116,15 @@ private:
     ASSERT(false, "Not implemented yet.");
   };
 
-  /**
-   * load existing table heap by first_page_id
-   */
   explicit TableHeap(BufferPoolManager *buffer_pool_manager, page_id_t first_page_id, Schema *schema,
                      LogManager *log_manager, LockManager *lock_manager)
-          : buffer_pool_manager_(buffer_pool_manager),
-            first_page_id_(first_page_id),
-            schema_(schema),
-            log_manager_(log_manager),
-            lock_manager_(lock_manager) {}
+      : buffer_pool_manager_(buffer_pool_manager),
+        first_page_id_(first_page_id),
+        schema_(schema),
+        log_manager_(log_manager),
+        lock_manager_(lock_manager) {}
 
-private:
+ private:
   BufferPoolManager *buffer_pool_manager_;
   page_id_t first_page_id_;
   Schema *schema_;

@@ -12,16 +12,16 @@ extern "C" {
 };
 
 class SyntaxTreePrinter {
-public:
-  explicit SyntaxTreePrinter(pSyntaxNode root) : root_(root) {};
+ public:
+  explicit SyntaxTreePrinter(pSyntaxNode root) : root_(root){};
 
   void PrintTree(std::ofstream &out);
 
-private:
+ private:
   void PrintTreeLow(pSyntaxNode node, std::ofstream &out);
 
-private:
+ private:
   pSyntaxNode root_;
 };
 
-#endif //MINISQL_SYNTAX_TREE_PRINTER_H
+#endif  // MINISQL_SYNTAX_TREE_PRINTER_H

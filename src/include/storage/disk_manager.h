@@ -6,6 +6,7 @@
 #include <iostream>
 #include <mutex>
 #include <string>
+
 #include "common/config.h"
 #include "common/macros.h"
 #include "page/bitmap_page.h"
@@ -20,7 +21,7 @@
  *      | Page N | Free Page BitMap 2 | Page N+1 | ... | Page 2N | ... |
  */
 class DiskManager {
-public:
+ public:
   explicit DiskManager(const std::string &db_file);
 
   ~DiskManager() {
@@ -31,13 +32,13 @@ public:
 
   /**
    * Read page from specific page_id
-   * Note: page_id = 0 is reserved for disk meta page
+   * Note: page_id = 0 is reserved for free page bit map
    */
   void ReadPage(page_id_t logical_page_id, char *page_data);
 
   /**
    * Write data to specific page
-   * Note: page_id = 0 is reserved for disk meta page
+   * Note: page_id = 0 is reserved for free page bit map
    */
   void WritePage(page_id_t logical_page_id, const char *page_data);
 
@@ -66,13 +67,11 @@ public:
    * Get Meta Page
    * Note: Used only for debug
    */
-  char *GetMetaData() {
-    return meta_data_;
-  }
+  char *GetMetaData() { return meta_data_; }
 
   static constexpr size_t BITMAP_SIZE = BitmapPage<PAGE_SIZE>::GetMaxSupportedSize();
 
-private:
+ private:
   /**
    * Helper function to get disk file size
    */
@@ -93,7 +92,7 @@ private:
    */
   page_id_t MapPageId(page_id_t logical_page_id);
 
-private:
+ private:
   // stream to write db file
   std::fstream db_io_;
   std::string file_name_;

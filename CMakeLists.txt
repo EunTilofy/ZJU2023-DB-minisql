@@ -1,58 +1,71 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
-if(POLICY CMP0042)
-    cmake_policy(SET CMP0042 NEW)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.16)
+
+# Suppress cmake policy warning
+if (APPLE)
+    SET(CMAKE_MACOSX_RPATH 0)
 endif()
 
-MESSAGE(STATUS "Cmake output binray directory: ${CMAKE_BINARY_DIR}")
-
-# Project Info
-SET(CMAKE_CXX_STANDARD 17)
+# Project info
 PROJECT(MiniSQL
-        VERSION 2022.1
-        DESCRIPTION "ZheJiang University 2021~2022 Spring-Summer Database System Project"
+        VERSION 2022.7
+        DESCRIPTION "ZheJiang University 2022~2023 Spring-Summer Database System Project"
         LANGUAGES C CXX)
+SET(BUILD_SHARED_LIBS ON)
+SET(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# CTest
-enable_testing()
+# Enable CTest
+ENABLE_TESTING()
+
+# Check clang-format
+IF (NOT DEFINED CLANG_FORMAT_BIN)
+    FIND_PROGRAM(CLANG_FORMAT_BIN NAMES clang-format clang-format-12)
+ENDIF()
+IF ("${CLANG_FORMAT_BIN}" STREQUAL "CLANG_FORMAT_BIN-NOTFOUND")
+    MESSAGE(WARNING "Could NOT find clang-format.")
+ENDIF()
 
 # Options
-ADD_DEFINITIONS(-DENABLE_DEBUG)
-# ADD_DEFINITIONS(-DENABLE_EXECUTE_DEBUG)
-# ADD_DEFINITIONS(-DENABLE_PARSER_DEBUG)
-# ADD_DEFINITIONS(-DENABLE_BPM_DEBUG)
-# ADD_DEFINITIONS(-DSHOW_PAGE_SPLIT)
+ADD_DEFINITIONS(-DENABLE_OUTPUT_DBG_INFO)
 
-# Set Include Directory
+# Set include directories
 SET(THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty)
-SET(MINISQL_SRC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
-SET(MINISQL_TEST_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/test/include)
-SET(MINISQL_GTEST_INCLUDE_DIR ${THIRD_PARTY_DIR}/googletest/include)
-SET(MINISQL_GLOG_INCLUDE_DIR ${THIRD_PARTY_DIR}/glog/src)
-INCLUDE_DIRECTORIES(${MINISQL_SRC_INCLUDE_DIR} ${MINISQL_TEST_INCLUDE_DIR} ${MINISQL_GTEST_INCLUDE_DIR} ${MINISQL_GLOG_INCLUDE_DIR})
+SET(SRC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/src/include)
+SET(TEST_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/test/include)
+SET(GTEST_INCLUDE_DIR ${THIRD_PARTY_DIR}/googletest/include)
+SET(GLOG_INCLUDE_DIR ${THIRD_PARTY_DIR}/glog/src)
+INCLUDE_DIRECTORIES(${SRC_INCLUDE_DIR} ${TEST_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${GTEST_INCLUDE_DIR} ${GLOG_INCLUDE_DIR})
 
-# Add gtest
+# Set cmake module path
+LIST(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+
+# Thirdparty module gtest
 ADD_SUBDIRECTORY(${THIRD_PARTY_DIR}/googletest ${CMAKE_BINARY_DIR}/googletest-build)
-# Add glog
+TARGET_COMPILE_OPTIONS(gtest PRIVATE "-fPIC")
+TARGET_COMPILE_OPTIONS(gtest_main PRIVATE "-fPIC")
+# Thirdparty module glog
 ADD_SUBDIRECTORY(${THIRD_PARTY_DIR}/glog ${CMAKE_BINARY_DIR}/glog-build)
-target_compile_options(gtest PRIVATE "-fPIC")
-target_compile_options(gtest_main PRIVATE "-fPIC")
 
-# Compiler flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra -Werror -march=native")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-attributes")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")
-# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
-# set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fPIC")
-# set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fPIC")
-# set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} -fPIC")
+# Compile options in debug mode
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+#SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+if (APPLE)
+    # Note: memory leak detection is not currently supported in macOS BigSur
+    MESSAGE(STATUS "For macOS 10.x, you need to set ASAN_OPTIONS=detect_leaks=1 to detect memory leak.")
+endif()
+# Compile options in cxx
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra -Werror -Wno-unused-parameter")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra ")
 
-# set(GCC_COVERAGE_LINK_FLAGS    "-fPIC")
-# message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-# message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
-# message(STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}")
-# message(STATUS "CMAKE_SHARED_LINKER_FLAGS: ${CMAKE_SHARED_LINKER_FLAGS}")
-
-# Add Subdirectory
+# Subdirectory
 ADD_SUBDIRECTORY(src ${CMAKE_BINARY_DIR}/bin)
 ADD_SUBDIRECTORY(test ${CMAKE_BINARY_DIR}/test)
+
+# Output messages
+MESSAGE(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+MESSAGE(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+MESSAGE(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
+MESSAGE(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
+MESSAGE(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")

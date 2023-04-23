@@ -6,12 +6,12 @@
 
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <map>
+#include <sstream>
 
 class TreeFileManagers {
-public:
-  explicit TreeFileManagers(std::string file_prefix) : file_prefix_(file_prefix) {};
+ public:
+  explicit TreeFileManagers(std::string file_prefix) : file_prefix_(file_prefix){};
 
   ~TreeFileManagers() {
     for (auto e : outs_) {
@@ -27,7 +27,7 @@ public:
     return *(outs_[id]);
   }
 
-private:
+ private:
   void open_file(std::string file_name, std::ofstream &out) {
     remove(file_name.c_str());
     out.open(file_name, std::ios::in | std::ios::out);
@@ -63,9 +63,9 @@ private:
     }
   }
 
-private:
+ private:
   std::map<int, std::ofstream *> outs_;
   std::string file_prefix_;
 };
 
-#endif //MINISQL_TREE_FILE_MGR_H
+#endif  // MINISQL_TREE_FILE_MGR_H
