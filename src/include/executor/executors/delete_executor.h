@@ -10,6 +10,7 @@
 #include "executor/execute_context.h"
 #include "executor/executors/abstract_executor.h"
 #include "executor/plans/delete_plan.h"
+#include "executor/executors/index_scan_executor.h"
 
 /**
  * DeletedExecutor executes a delete on a table.
@@ -48,6 +49,8 @@ class DeleteExecutor : public AbstractExecutor {
   const DeletePlanNode *plan_;
   /** The child executor from which RIDs for deleted rows are pulled */
   std::unique_ptr<AbstractExecutor> child_executor_;
+  // Student added member
+  TableHeap* tableHeap_;
 };
 
 #endif  // MINISQL_DELETE_EXECUTOR_H

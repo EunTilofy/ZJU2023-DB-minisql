@@ -1,6 +1,7 @@
 //
 // Created by njz on 2023/2/2.
 //
+#include <algorithm>
 #include "planner/planner.h"
 
 void Planner::PlanQuery(pSyntaxNode ast) {

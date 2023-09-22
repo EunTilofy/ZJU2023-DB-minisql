@@ -1,10 +1,10 @@
 #ifndef MINISQL_LRU_REPLACER_H
 #define MINISQL_LRU_REPLACER_H
 
-#include <list>
 #include <mutex>
 #include <unordered_set>
-#include <vector>
+#include <deque>
+#include <set>
 
 #include "buffer/replacer.h"
 #include "common/config.h"
@@ -35,8 +35,12 @@ class LRUReplacer : public Replacer {
 
   size_t Size() override;
 
-private:
-  // add your own private member variables here
+ private:
+  // Student added variables
+  size_t num_victims_;
+  size_t max_num_victims_;
+  std::deque<frame_id_t> victim_list_;
+  std::set<frame_id_t> pinned_list_;
 };
 
 #endif  // MINISQL_LRU_REPLACER_H

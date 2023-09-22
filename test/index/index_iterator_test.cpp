@@ -12,11 +12,12 @@ TEST(BPlusTreeTests, IndexIteratorTest) {
       new Column("int", TypeId::kTypeInt, 0, false, false),
   };
   Schema *table_schema = new Schema(columns);
-  KeyManager KP(table_schema, 16);
+  KeyManager KP(table_schema, 21);
   BPlusTree tree(0, engine.bpm_, KP);
   // Generate insert record
   vector<GenericKey *> insert_key;
-  for (int i = 1; i <= 50; i++) {
+  int n = 100000;
+  for (int i = 1; i <= n; i++) {
     GenericKey *key = KP.InitKey();
     std::vector<Field> fields{Field(TypeId::kTypeInt, i)};
     KP.SerializeFromKey(key, Row(fields), table_schema);
@@ -25,7 +26,7 @@ TEST(BPlusTreeTests, IndexIteratorTest) {
   }
   // Generate delete record
   vector<GenericKey *> delete_key;
-  for (int i = 2; i <= 50; i += 2) {
+  for (int i = 2; i <= n; i += 2) {
     GenericKey *key = KP.InitKey();
     std::vector<Field> fields{Field(TypeId::kTypeInt, i)};
     KP.SerializeFromKey(key, Row(fields), table_schema);
@@ -38,7 +39,7 @@ TEST(BPlusTreeTests, IndexIteratorTest) {
   for (auto key : delete_key) {
     ASSERT_FALSE(tree.GetValue(key, v));
   }
-  for (int i = 1; i <= 49; i += 2) {
+  for (int i = 1; i <= n; i += 2) {
     GenericKey *key = KP.InitKey();
     std::vector<Field> fields{Field(TypeId::kTypeInt, i)};
     KP.SerializeFromKey(key, Row(fields), table_schema);

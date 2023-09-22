@@ -6,23 +6,29 @@
  */
 /**
  * TODO: Student Implement
+ * false : InternalPage 2
+ * true : LeafPage 1
  */
 bool BPlusTreePage::IsLeafPage() const {
-  return false;
+  if(page_type_ == IndexPageType::LEAF_PAGE) return true;
+  else return false;
 }
 
 /**
  * TODO: Student Implement
+ * true : parent_page_id = INVALID_PAGE_ID
  */
 bool BPlusTreePage::IsRootPage() const {
+  if(parent_page_id_ == INVALID_PAGE_ID) return true;
   return false;
 }
 
 /**
  * TODO: Student Implement
+ * set page_type
  */
 void BPlusTreePage::SetPageType(IndexPageType page_type) {
-
+  page_type_ = page_type;
 }
 
 int BPlusTreePage::GetKeySize() const {
@@ -54,16 +60,18 @@ void BPlusTreePage::IncreaseSize(int amount) {
  */
 /**
  * TODO: Student Implement
+ * return max_size_
  */
 int BPlusTreePage::GetMaxSize() const {
-  return 0;
+  return max_size_;
 }
 
 /**
  * TODO: Student Implement
+ * max_size_ = size
  */
 void BPlusTreePage::SetMaxSize(int size) {
-
+  max_size_ = size;
 }
 
 /*
@@ -72,9 +80,10 @@ void BPlusTreePage::SetMaxSize(int size) {
  */
 /**
  * TODO: Student Implement
+ * min page size = max page size / 2
  */
 int BPlusTreePage::GetMinSize() const {
-  return 0;
+  return max_size_ / 2;
 }
 
 /*
@@ -82,9 +91,10 @@ int BPlusTreePage::GetMinSize() const {
  */
 /**
  * TODO: Student Implement
+ * return parent_page_id_
  */
 page_id_t BPlusTreePage::GetParentPageId() const {
-  return INVALID_PAGE_ID;
+  return parent_page_id_;
 }
 
 void BPlusTreePage::SetParentPageId(page_id_t parent_page_id) {

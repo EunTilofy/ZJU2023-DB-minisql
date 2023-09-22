@@ -6,6 +6,7 @@
 #include "executor/executors/abstract_executor.h"
 #include "executor/plans/index_scan_plan.h"
 #include "planner/expressions/column_value_expression.h"
+#include "planner/expressions/constant_value_expression.h"
 #include "planner/expressions/comparison_expression.h"
 
 /**
@@ -34,8 +35,17 @@ class IndexScanExecutor : public AbstractExecutor {
   /** @return The output schema for the sequential scan */
   const Schema *GetOutputSchema() const override { return plan_->OutputSchema(); }
 
+  // Student added member function
+  const IndexScanPlanNode* GetPlan() const { return plan_; }
+
  private:
 
   /** The sequential scan plan node to be executed */
   const IndexScanPlanNode *plan_;
+
+  //Student added members
+  vector<RowId> index_results_;
+  vector<RowId>::iterator it_;
+  Schema* original_schema_;
+  TableInfo* table_;
 };

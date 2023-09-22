@@ -21,7 +21,7 @@ class RandomUtils {
   static void RandomString(char *buf, size_t len) {
     std::random_device r;
     std::default_random_engine rng(r());
-    std::uniform_int_distribution<char> uniform_dist(33, 122);
+    std::uniform_int_distribution<int> uniform_dist(33, 122);
     for (size_t i = 0; i < len; i++) {
       buf[i] = uniform_dist(rng);
     }

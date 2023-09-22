@@ -3,6 +3,7 @@
 
 #include <list>
 #include <mutex>
+#include <thread>
 #include <unordered_map>
 
 #include "buffer/lru_replacer.h"

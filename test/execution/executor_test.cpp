@@ -4,6 +4,7 @@
 #include "executor/plans/delete_plan.h"
 #include "executor/plans/insert_plan.h"
 #include "executor/plans/seq_scan_plan.h"
+#include "executor/plans/index_scan_plan.h"
 #include "executor/plans/update_plan.h"
 #include "executor/plans/values_plan.h"
 #include "executor_test_util.h"  // NOLINT
@@ -137,7 +138,7 @@ TEST_F(ExecutorTest, SimpleUpdateTest) {
 
   // Construct an update plan
   std::unordered_map<uint32_t, AbstractExpressionRef> update_attrs{};
-  auto content = MakeConstantValueExpression(Field(kTypeChar, const_cast<char *>("minisql"), 7, false));
+  auto content = MakeConstantValueExpression(Field(kTypeChar, const_cast<char *>("mimisql"), 7, false));
   update_attrs.emplace(static_cast<uint32_t>(1), content);
   auto update_plan = std::make_shared<UpdatePlanNode>(schema, scan_plan, "table-1", update_attrs);
 
@@ -152,6 +153,33 @@ TEST_F(ExecutorTest, SimpleUpdateTest) {
   ASSERT_EQ(result_set.size(), 1);
   for (const auto &row : result_set) {
     ASSERT_TRUE(row.GetField(0)->CompareEquals(Field(kTypeInt, 500)));
-    ASSERT_TRUE(row.GetField(1)->CompareEquals(Field(kTypeChar, const_cast<char *>("minisql"), 7, false)));
+    ASSERT_TRUE(row.GetField(1)->CompareEquals(Field(kTypeChar, const_cast<char *>("mimisql"), 7, false)));
+  }
+}
+
+TEST_F(ExecutorTest, SimpleIndexScanTest) {
+  // Construct query plan
+  TableInfo *table_info;
+  GetExecutorContext()->GetCatalog()->GetTable("table-1", table_info);
+  const Schema *schema = table_info->GetSchema();
+  IndexInfo* index;
+  vector <std::string> pk {"id"};
+  GetExecutorContext()->GetCatalog()->CreateIndex("table-1", "index-1", pk, nullptr, index, "bptree");
+  auto col_a = MakeColumnValueExpression(*schema, 0, "id");
+  auto col_b = MakeColumnValueExpression(*schema, 0, "name");
+  auto const500 = MakeConstantValueExpression(Field(kTypeInt, 500));
+  auto predicate = MakeComparisonExpression(col_a, const500, "<");
+  auto out_schema = MakeOutputSchema({{"id", col_a}, {"name", col_b}});
+  vector<IndexInfo*> indexes;
+  GetExecutorContext()->GetCatalog()->GetTableIndexes("table-1", indexes);
+  auto plan = make_shared<IndexScanPlanNode>(out_schema, table_info->GetTableName(), indexes, true, predicate);
+  // Execute
+  std::vector<Row> result_set{};
+  GetExecutionEngine()->ExecutePlan(plan, &result_set, GetTxn(), GetExecutorContext());
+
+  // Verify
+  ASSERT_EQ(result_set.size(), 500);
+  for (const auto &row : result_set) {
+    ASSERT_TRUE(row.GetField(0)->CompareLessThan(Field(kTypeInt, 500)));
   }
 }

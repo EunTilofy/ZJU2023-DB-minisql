@@ -57,7 +57,7 @@ if (APPLE)
 endif()
 # Compile options in cxx
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra -Werror -Wno-unused-parameter")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra ")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=gnu++11 -fPIC -Wall -Wextra -Wattributes -Wunused-parameter")
 
 # Subdirectory
 ADD_SUBDIRECTORY(src ${CMAKE_BINARY_DIR}/bin)

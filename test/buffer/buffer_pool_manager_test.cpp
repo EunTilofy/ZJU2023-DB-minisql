@@ -12,7 +12,7 @@ TEST(BufferPoolManagerTest, BinaryDataTest) {
 
   std::random_device r;
   std::default_random_engine rng(r());
-  std::uniform_int_distribution<char> uniform_dist(0);
+  std::uniform_int_distribution<int16_t> uniform_dist(0);
 
   remove(db_name.c_str());
   auto *disk_manager = new DiskManager(db_name);
@@ -64,6 +64,53 @@ TEST(BufferPoolManagerTest, BinaryDataTest) {
   page0 = bpm->FetchPage(0);
   EXPECT_EQ(0, memcmp(page0->GetData(), random_binary_data, PAGE_SIZE));
   EXPECT_EQ(true, bpm->UnpinPage(0, true));
+
+  // Shutdown the disk manager and remove the temporary file we created.
+  disk_manager->Close();
+  remove(db_name.c_str());
+
+  delete bpm;
+  delete disk_manager;
+}
+
+TEST(BufferPoolManagerTest, DeletePageTest) {
+  const std::string db_name = "bpm_test.db";
+  const size_t buffer_pool_size = 10;
+
+  std::random_device r;
+  std::default_random_engine rng(r());
+  std::uniform_int_distribution<int16_t> uniform_dist(0);
+
+  remove(db_name.c_str());
+  auto *disk_manager = new DiskManager(db_name);
+  auto *bpm = new BufferPoolManager(buffer_pool_size, disk_manager);
+
+  page_id_t page_id_temp;
+  auto *page0 = bpm->NewPage(page_id_temp);
+
+  // Scenario: The buffer pool is empty. We should be able to create a new page.
+  ASSERT_NE(nullptr, page0);
+  EXPECT_EQ(0, page_id_temp);
+
+  char random_binary_data[PAGE_SIZE];
+  // Generate random binary data
+  for (char &i : random_binary_data) {
+    i = uniform_dist(rng);
+  }
+
+  // Insert terminal characters both in the middle and at end
+  random_binary_data[PAGE_SIZE / 2] = '\0';
+  random_binary_data[PAGE_SIZE - 1] = '\0';
+
+  // Scenario: Once we have a page, we should be able to read and write content.
+  std::memcpy(page0->GetData(), random_binary_data, PAGE_SIZE);
+  EXPECT_EQ(0, std::memcmp(page0->GetData(), random_binary_data, PAGE_SIZE));
+
+  // Scenario: We need to be able to fetch the data of the page after deleting it.
+  bpm->UnpinPage(0, true);
+  bpm->DeletePage(0);
+  bpm->FetchPage(0);
+  EXPECT_EQ(0, std::memcmp(page0->GetData(), random_binary_data, PAGE_SIZE));
 
   // Shutdown the disk manager and remove the temporary file we created.
   disk_manager->Close();

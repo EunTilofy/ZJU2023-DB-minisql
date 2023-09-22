@@ -20,7 +20,9 @@ class KeyManager {
   inline void SerializeFromKey(GenericKey *key_buf, const Row &key, Schema *schema) const {
     // initialize to 0
     [[maybe_unused]] uint32_t size = key.GetSerializedSize(schema);
+//    LOG(INFO) << size ;
     ASSERT(key.GetFieldCount() == schema->GetColumnCount(), "field nums not match.");
+//    LOG(INFO) << size << " " << key_size_;
     ASSERT(size <= (uint32_t)key_size_, "Index key size exceed max key size.");
     memset(key_buf->data, 0, key_size_);
     key.SerializeTo(key_buf->data, schema);
@@ -45,18 +47,10 @@ class KeyManager {
       Field *rhs_value = rhs_key.GetField(i);
 
       if (lhs_value->CompareLessThan(*rhs_value) == CmpBool::kTrue) {
-        if (key_schema_->GetColumn(i)->GetType() == kTypeChar) {
-          delete lhs_value->GetData();
-          delete rhs_value->GetData();
-        }
         return -1;
       }
 
       if (lhs_value->CompareGreaterThan(*rhs_value) == CmpBool::kTrue) {
-        if (key_schema_->GetColumn(i)->GetType() == kTypeChar) {
-          delete lhs_value->GetData();
-          delete rhs_value->GetData();
-        }
         return 1;
       }
     }

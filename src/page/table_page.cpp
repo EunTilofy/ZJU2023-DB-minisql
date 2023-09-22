@@ -29,14 +29,14 @@ bool TablePage::InsertTuple(Row &row, Schema *schema, Transaction *txn, LockMana
   }
   // Otherwise we claim available free space..
   SetFreeSpacePointer(GetFreeSpacePointer() - serialized_size);
+  // Set rid
+  row.SetRowId(RowId(GetTablePageId(), i));
   uint32_t __attribute__((unused)) write_bytes = row.SerializeTo(GetData() + GetFreeSpacePointer(), schema);
   ASSERT(write_bytes == serialized_size, "Unexpected behavior in row serialize.");
 
   // Set the tuple.
   SetTupleOffsetAtSlot(i, GetFreeSpacePointer());
   SetTupleSize(i, serialized_size);
-  // Set rid
-  row.SetRowId(RowId(GetTablePageId(), i));
   if (i == GetTupleCount()) {
     SetTupleCount(GetTupleCount() + 1);
   }
@@ -61,7 +61,7 @@ bool TablePage::MarkDelete(const RowId &rid, Transaction *txn, LockManager *lock
   return true;
 }
 
-bool TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema, Transaction *txn,
+int TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema, Transaction *txn,
                             LockManager *lock_manager, LogManager *log_manager) {
   ASSERT(old_row != nullptr && old_row->GetRowId().Get() != INVALID_ROWID.Get(), "invalid old row.");
   uint32_t serialized_size = new_row.GetSerializedSize(schema);
@@ -69,16 +69,16 @@ bool TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema, Tr
   uint32_t slot_num = old_row->GetRowId().GetSlotNum();
   // If the slot number is invalid, abort.
   if (slot_num >= GetTupleCount()) {
-    return false;
+    return -1;
   }
   uint32_t tuple_size = GetTupleSize(slot_num);
   // If the tuple is deleted, abort.
   if (IsDeleted(tuple_size)) {
-    return false;
+    return -2;
   }
   // If there is not enough space to update, we need to update via delete followed by an insert (not enough space).
   if (GetFreeSpaceRemaining() + tuple_size < serialized_size) {
-    return false;
+    return -3;
   }
   // Copy out the old value.
   uint32_t tuple_offset = GetTupleOffsetAtSlot(slot_num);
@@ -99,7 +99,7 @@ bool TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema, Tr
       SetTupleOffsetAtSlot(i, tuple_offset_i + tuple_size - new_row.GetSerializedSize(schema));
     }
   }
-  return true;
+  return 1;
 }
 
 void TablePage::ApplyDelete(const RowId &rid, Transaction *txn, LogManager *log_manager) {
@@ -120,6 +120,7 @@ void TablePage::ApplyDelete(const RowId &rid, Transaction *txn, LogManager *log_
           tuple_offset - free_space_pointer);
   SetFreeSpacePointer(free_space_pointer + tuple_size);
   SetTupleSize(slot_num, 0);
+  SetTupleCount(GetTupleCount() - 1);
   SetTupleOffsetAtSlot(slot_num, 0);
 
   // Update all tuple offsets.

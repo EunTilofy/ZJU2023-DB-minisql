@@ -9,6 +9,7 @@
 
 #include <utility>
 #include <vector>
+#include <memory>
 
 /** PlanType represents the types of plans that we have in our system. */
 enum class PlanType {

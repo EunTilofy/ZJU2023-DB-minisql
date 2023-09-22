@@ -4,6 +4,7 @@
 #include <atomic>
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <mutex>
 #include <string>
 
@@ -71,6 +72,8 @@ class DiskManager {
 
   static constexpr size_t BITMAP_SIZE = BitmapPage<PAGE_SIZE>::GetMaxSupportedSize();
 
+  static constexpr size_t EXTENT_SIZE = MAX_VALID_PAGE_ID / BITMAP_SIZE;
+
  private:
   /**
    * Helper function to get disk file size
@@ -100,6 +103,7 @@ class DiskManager {
   std::recursive_mutex db_io_latch_;
   bool closed{false};
   char meta_data_[PAGE_SIZE];
+  uint16_t next_free_extent_;
 };
 
 #endif

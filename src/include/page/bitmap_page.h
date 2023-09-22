@@ -40,14 +40,23 @@ class BitmapPage {
    */
   bool IsPageFreeLow(uint32_t byte_index, uint8_t bit_index) const;
 
+  /**
+   * check a bit(byte_index, bit_index) in bytes is free(value 0).
+   *
+   * @param byte_index value of page_offset / 8
+   * @param bit_index value of page_offset % 8
+   * @return true if a bit is 0, false if 1.
+   */
+  void UpdateNextFreePage();
+
   /** Note: need to update if modify page structure. */
   static constexpr size_t MAX_CHARS = PageSize - 2 * sizeof(uint32_t);
 
  private:
   /** The space occupied by all members of the class should be equal to the PageSize */
-  [[maybe_unused]] uint32_t page_allocated_;
-  [[maybe_unused]] uint32_t next_free_page_;
-  [[maybe_unused]] unsigned char bytes[MAX_CHARS];
+  [[maybe_unused]] uint32_t page_allocated_{0};
+  [[maybe_unused]] uint32_t next_free_page_{0};
+  [[maybe_unused]] unsigned char bytes[MAX_CHARS]{0};
 };
 
 #endif  // MINISQL_BITMAP_PAGE_H
